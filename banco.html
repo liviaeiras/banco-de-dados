@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guia de Estudos — BD Não Relacionais</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3e;
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --accent3: #f59e0b;
+    --accent4: #10b981;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --card-glow: rgba(124,58,237,0.08);
+    --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Consolas', 'Courier New', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 3rem 0 2.5rem;
+    position: relative;
+  }
+  .header-tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--accent2);
+    background: rgba(6,182,212,0.1);
+    border: 1px solid rgba(6,182,212,0.25);
+    padding: 0.3rem 0.8rem;
+    border-radius: 2px;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+  }
+  .header h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #e2e8f0 0%, #7c3aed 60%, #06b6d4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.6rem;
+  }
+  .header p {
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.8rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+  .progress-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--accent2);
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+  }
+  .progress-bar-bg {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+  .progress-count {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Nav */
+  .nav {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 2.5rem;
+  }
+  .nav-btn {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    border-color: var(--accent);
+    color: var(--text);
+    background: rgba(124,58,237,0.15);
+  }
+
+  /* Section */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+  .section-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .section-sub {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.1rem;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .card:hover { border-color: rgba(124,58,237,0.35); }
+  .card:hover::before { opacity: 1; }
+
+  .card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--accent2);
+    margin-bottom: 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card p {
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: #94a3b8;
+  }
+  .card p strong { color: var(--text); }
+  .card p code {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    background: rgba(124,58,237,0.15);
+    color: #c4b5fd;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+  }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; margin: 1rem 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  th {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    border-bottom: 1px solid var(--border);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    background: var(--surface2);
+  }
+  td {
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid rgba(42,42,62,0.5);
+    color: #94a3b8;
+    line-height: 1.5;
+  }
+  td strong { color: var(--text); }
+  tr:hover td { background: rgba(124,58,237,0.04); }
+
+  /* Code block */
+  .code-block {
+    background: #0d0d18;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: #a5b4fc;
+    overflow-x: auto;
+    margin: 0.8rem 0;
+    white-space: pre;
+  }
+  .code-block .kw { color: #7c3aed; font-weight: 700; }
+  .code-block .fn { color: #06b6d4; }
+  .code-block .str { color: #10b981; }
+  .code-block .num { color: #f59e0b; }
+  .code-block .cm { color: #4b5563; font-style: italic; }
+
+  /* Badge chips */
+  .chips { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.7rem; }
+  .chip {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 2px;
+    border: 1px solid;
+    letter-spacing: 0.05em;
+  }
+  .chip-purple { color: #c4b5fd; border-color: rgba(124,58,237,0.4); background: rgba(124,58,237,0.1); }
+  .chip-cyan   { color: #67e8f9; border-color: rgba(6,182,212,0.4); background: rgba(6,182,212,0.1); }
+  .chip-amber  { color: #fcd34d; border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.1); }
+  .chip-green  { color: #6ee7b7; border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.1); }
+  .chip-red    { color: #fca5a5; border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.1); }
+
+  /* Alert boxes */
+  .alert {
+    border-radius: 6px;
+    padding: 0.9rem 1.1rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin: 0.8rem 0;
+    border-left: 3px solid;
+  }
+  .alert-warn { background: rgba(245,158,11,0.08); border-color: var(--accent3); color: #fcd34d; }
+  .alert-info { background: rgba(6,182,212,0.08); border-color: var(--accent2); color: #67e8f9; }
+  .alert-tip  { background: rgba(16,185,129,0.08); border-color: var(--accent4); color: #6ee7b7; }
+  .alert strong { font-weight: 700; }
+
+  /* Quiz */
+  .quiz-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1.2rem;
+  }
+  .quiz-q {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+  .quiz-q span {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--accent3);
+    background: rgba(245,158,11,0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    margin-right: 0.5rem;
+  }
+  .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .quiz-option {
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--surface2);
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: #94a3b8;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+    font-family: var(--font-sans);
+  }
+  .quiz-option:hover:not(.answered) {
+    border-color: rgba(124,58,237,0.4);
+    color: var(--text);
+    background: rgba(124,58,237,0.1);
+  }
+  .quiz-option.correct {
+    border-color: var(--accent4);
+    background: rgba(16,185,129,0.12);
+    color: #6ee7b7;
+  }
+  .quiz-option.wrong {
+    border-color: var(--danger);
+    background: rgba(239,68,68,0.1);
+    color: #fca5a5;
+  }
+  .quiz-feedback {
+    margin-top: 0.8rem;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    display: none;
+    padding: 0.7rem 0.9rem;
+    border-radius: 5px;
+  }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.ok { background: rgba(16,185,129,0.1); color: #6ee7b7; border-left: 2px solid var(--accent4); }
+  .quiz-feedback.nok { background: rgba(239,68,68,0.08); color: #fca5a5; border-left: 2px solid var(--danger); }
+
+  /* Score */
+  .score-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+  .score-num { font-size: 1.6rem; font-weight: 700; color: var(--accent2); }
+  .score-label { color: var(--muted); font-size: 0.7rem; }
+
+  /* Grid 2 cols */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0.8rem 0; }
+  @media (max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* Rule callout */
+  .rule {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.9rem 1.1rem;
+    margin: 0.7rem 0;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+  .rule-title {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    color: var(--accent3);
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+  }
+  .rule p strong { color: var(--text); }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-tag">🎓 Universidade de Vassouras — Prof. Alvaro Leiroz</div>
+    <h1>Guia de Estudos<br>Banco de Dados</h1>
+    <p>Aulas 3, 4 e 5 — tudo que cai na prova de amanhã</p>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <div class="progress-label">PROGRESSO DO QUIZ</div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progBar" style="width:0%"></div></div>
+    <div class="progress-count" id="progCount">0 / 12</div>
+  </div>
+
+  <!-- Nav -->
+  <div class="nav">
+    <button class="nav-btn active" onclick="showSection('tipagem')">📦 Tipos de Dados</button>
+    <button class="nav-btn" onclick="showSection('subquery')">🔍 Subquery & CTE</button>
+    <button class="nav-btn" onclick="showSection('case')">⚡ CASE WHEN</button>
+    <button class="nav-btn" onclick="showSection('window')">🪟 Window Functions</button>
+    <button class="nav-btn" onclick="showSection('indices')">⚙️ Índices & EXPLAIN</button>
+    <button class="nav-btn" onclick="showSection('views')">👁️ Views</button>
+    <button class="nav-btn" onclick="showSection('quiz')">🧠 Quiz</button>
+  </div>
+
+  <!-- ==================== TIPAGEM ==================== -->
+  <div class="section active" id="tipagem">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(124,58,237,0.15)">📦</div>
+      <div>
+        <div class="section-title">Tipos de Dados em BD</div>
+        <div class="section-sub">Aula 3 — Numéricos, Texto, Data, Binários, ENUM, CHECK</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔢 Tipos Numéricos Inteiros</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tipo</th><th>Tamanho</th><th>Faixa</th><th>Quando usar</th></tr>
+          <tr><td><strong>TINYINT</strong></td><td>1 byte</td><td>-128 a 127</td><td>Idade, flag booleana</td></tr>
+          <tr><td><strong>SMALLINT</strong></td><td>2 bytes</td><td>-32.768 a 32.767</td><td>Quantidade pequena</td></tr>
+          <tr><td><strong>MEDIUMINT</strong></td><td>3 bytes</td><td>±8,3 mi</td><td>MySQL-específico</td></tr>
+          <tr><td><strong>INT</strong></td><td>4 bytes</td><td>±2,1 bi</td><td>IDs gerais (mais usado)</td></tr>
+          <tr><td><strong>BIGINT</strong></td><td>8 bytes</td><td>±9,2 quintilhões</td><td>IDs de alta escala</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🌊 Ponto Flutuante e Precisão Fixa</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tipo</th><th>Precisão</th><th>Uso</th></tr>
+          <tr><td><strong>FLOAT(m,d)</strong></td><td>Aproximada (4 bytes)</td><td>Medidas onde pequeno erro é ok</td></tr>
+          <tr><td><strong>DOUBLE</strong></td><td>Maior aprox. (8 bytes)</td><td>Cálculos científicos</td></tr>
+          <tr><td><strong>DECIMAL(p,s)</strong></td><td><strong>Exata</strong> (variável)</td><td>💰 Valores monetários — use SEMPRE</td></tr>
+        </table>
+      </div>
+      <div class="alert alert-warn"><strong>⚠️ Dica de prova:</strong> Para dinheiro use <code>DECIMAL(10,2)</code> — evita erros de arredondamento que FLOAT e DOUBLE causam.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📝 Texto (String)</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tipo</th><th>Tamanho</th><th>Uso</th></tr>
+          <tr><td><strong>CHAR(n)</strong></td><td>n bytes fixo</td><td>Campos fixos: CEP, CPF formatado</td></tr>
+          <tr><td><strong>VARCHAR(n)</strong></td><td>Variável</td><td>Nomes, emails — textos curtos variáveis</td></tr>
+          <tr><td><strong>TEXT</strong></td><td>Variável (grande)</td><td>Descrições longas, posts</td></tr>
+          <tr><td><strong>BLOB</strong></td><td>Variável (binário)</td><td>Imagens, vídeos, arquivos</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">📅 Data e Hora</div>
+        <p><code>DATE</code> — só data (YYYY-MM-DD, 3 bytes)<br>
+        <code>DATETIME</code> — data + hora (8 bytes)<br>
+        <code>TIMESTAMP</code> — Unix time (4 bytes) — atualiza com <code>CURRENT_TIMESTAMP</code><br>
+        <code>TIME</code> — só horário (3 bytes)<br>
+        <code>YEAR</code> — só ano (1 byte)</p>
+        <div class="alert alert-warn" style="margin-top:0.7rem"><strong>🐛 Year 2038 Bug:</strong> TIMESTAMP MySQL só vai até 2038!</div>
+      </div>
+      <div class="card">
+        <div class="card-title">🎛️ ENUM vs CHECK</div>
+        <p><strong>ENUM</strong> — lista predefinida no MySQL. Pouco flexível: para adicionar valor precisa de <code>ALTER TABLE</code>. Não é portável.<br><br>
+        <strong>CHECK</strong> (PostgreSQL/SQL Server) — mais flexível, permite adicionar valores sem alterar estrutura.<br><br>
+        Exemplo ENUM:<br><code>status ENUM('Pendente','Aprovado','Cancelado')</code></p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💾 Dados Binários</div>
+      <p><code>BINARY(n)</code> — tamanho fixo (ex: hashes MD5)<br>
+      <code>VARBINARY(n)</code> — tamanho variável<br>
+      <code>BLOB</code> — arquivos binários grandes (imagens, vídeos)</p>
+    </div>
+  </div>
+
+  <!-- ==================== SUBQUERY & CTE ==================== -->
+  <div class="section" id="subquery">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(6,182,212,0.15)">🔍</div>
+      <div>
+        <div class="section-title">Subquery & CTE</div>
+        <div class="section-sub">Aula 3 — consultas aninhadas e expressões de tabela comuns</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🧩 O que é uma Subquery?</div>
+      <p>Uma <strong>subquery</strong> é uma consulta SQL aninhada dentro de outra. Sempre dentro de parênteses <code>()</code>. Pode retornar um único valor, uma linha ou várias linhas. Pode aparecer em <code>SELECT</code>, <code>FROM</code> ou <code>WHERE</code>.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📍 Subquery no WHERE (mais comum)</div>
+      <div class="code-block"><span class="kw">SELECT</span> nome, salario
+<span class="kw">FROM</span> empregados
+<span class="kw">WHERE</span> salario <span class="kw">></span> (<span class="kw">SELECT</span> <span class="fn">AVG</span>(salario) <span class="kw">FROM</span> empregados);</div>
+      <p>A subquery calcula a média primeiro, depois filtra quem ganha acima dela.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 Subquery no SELECT</div>
+      <div class="code-block"><span class="kw">SELECT</span> nome, salario,
+       (<span class="kw">SELECT</span> <span class="fn">AVG</span>(salario) <span class="kw">FROM</span> empregados) <span class="kw">AS</span> media_geral
+<span class="kw">FROM</span> empregados;</div>
+      <p>Cada linha exibe o salário do funcionário <strong>e</strong> a média geral do lado.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🗂️ Subquery no FROM (tabela temporária)</div>
+      <div class="code-block"><span class="kw">SELECT</span> *
+<span class="kw">FROM</span> (
+    <span class="kw">SELECT</span> departamento, <span class="fn">AVG</span>(salario) <span class="kw">AS</span> media
+    <span class="kw">FROM</span> empregados
+    <span class="kw">GROUP BY</span> departamento
+) <span class="kw">AS</span> subquery;</div>
+      <p>Cria uma "tabela temporária virtual" que a query externa consulta.</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">✅ Quando USAR subquery</div>
+        <p>• Calcular valores intermediários<br>
+        • Quando retorna um único valor<br>
+        • Filtragem condicional complexa<br>
+        • Quando é mais legível que JOIN</p>
+      </div>
+      <div class="card">
+        <div class="card-title">❌ Quando NÃO usar</div>
+        <p>• Tabelas grandes (pode ser lento)<br>
+        • Quando um JOIN resolve<br>
+        • Subqueries aninhadas profundas<br>
+        • Dificuldade de indexação</p>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="card">
+      <div class="card-title">🏷️ CTE — Common Table Expression</div>
+      <p>Uma <strong>CTE</strong> cria uma consulta temporária nomeada usando <code>WITH</code>. Mais legível que subquery, pode ser reutilizada na mesma query.</p>
+      <div class="code-block"><span class="kw">WITH</span> funcionarios_bem_pagos <span class="kw">AS</span> (
+    <span class="kw">SELECT</span> nome, salario
+    <span class="kw">FROM</span> funcionarios
+    <span class="kw">WHERE</span> salario <span class="kw">></span> <span class="num">5000</span>
+)
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> funcionarios_bem_pagos;</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔄 CTE Recursiva (dados hierárquicos)</div>
+      <div class="code-block"><span class="kw">WITH RECURSIVE</span> hierarquia <span class="kw">AS</span> (
+    <span class="cm">-- Âncora: o chefe principal (sem chefe)</span>
+    <span class="kw">SELECT</span> id, nome, chefe_id, <span class="num">1</span> <span class="kw">AS</span> nivel
+    <span class="kw">FROM</span> funcionarios <span class="kw">WHERE</span> chefe_id <span class="kw">IS NULL</span>
+
+    <span class="kw">UNION ALL</span>
+
+    <span class="cm">-- Recursão: busca os subordinados</span>
+    <span class="kw">SELECT</span> f.id, f.nome, f.chefe_id, h.nivel <span class="kw">+</span> <span class="num">1</span>
+    <span class="kw">FROM</span> funcionarios f
+    <span class="kw">JOIN</span> hierarquia h <span class="kw">ON</span> f.chefe_id <span class="kw">=</span> h.id
+)
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> hierarquia <span class="kw">ORDER BY</span> nivel;</div>
+      <p>Útil para organogramas e categorias hierárquicas.</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">✅ Quando USAR CTE</div>
+        <p>• Consultas complexas com legibilidade<br>
+        • Subqueries repetitivas<br>
+        • Cálculos intermediários<br>
+        • Dados hierárquicos (WITH RECURSIVE)</p>
+      </div>
+      <div class="card">
+        <div class="card-title">❌ Quando NÃO usar CTE</div>
+        <p>• Se um JOIN simples resolve<br>
+        • No MySQL, CTEs não são materializadas (pode ser mais lento que temp table)<br>
+        • Conjuntos de dados muito grandes</p>
+      </div>
+    </div>
+
+    <div class="alert alert-info"><strong>💡 Diferença chave:</strong> Subquery no FROM precisa de alias (<code>AS subquery</code>). CTE nomeia a consulta antes com <code>WITH nome AS (...)</code>.</div>
+  </div>
+
+  <!-- ==================== CASE WHEN ==================== -->
+  <div class="section" id="case">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(245,158,11,0.15)">⚡</div>
+      <div>
+        <div class="section-title">CASE WHEN</div>
+        <div class="section-sub">Aula 4 — condicional SQL equivalente ao if/else</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📐 Estrutura básica</div>
+      <div class="code-block"><span class="kw">CASE</span>
+    <span class="kw">WHEN</span> condicao1 <span class="kw">THEN</span> resultado1
+    <span class="kw">WHEN</span> condicao2 <span class="kw">THEN</span> resultado2
+    <span class="kw">ELSE</span> resultado_padrao
+<span class="kw">END AS</span> nome_coluna</div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">🎯 CASE Pesquisado</div>
+        <p>Cada WHEN tem uma condição completa com operadores:</p>
+        <div class="code-block" style="font-size:0.72rem"><span class="kw">CASE</span>
+  <span class="kw">WHEN</span> salario <span class="kw">>=</span> <span class="num">5000</span> <span class="kw">THEN</span> <span class="str">'Alto'</span>
+  <span class="kw">WHEN</span> salario <span class="kw">>=</span> <span class="num">3000</span> <span class="kw">THEN</span> <span class="str">'Médio'</span>
+  <span class="kw">ELSE</span> <span class="str">'Baixo'</span>
+<span class="kw">END</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🎯 CASE Simples</div>
+        <p>Compara uma expressão com valores fixos:</p>
+        <div class="code-block" style="font-size:0.72rem"><span class="kw">CASE</span> status
+  <span class="kw">WHEN</span> <span class="str">'A'</span> <span class="kw">THEN</span> <span class="str">'Ativo'</span>
+  <span class="kw">WHEN</span> <span class="str">'I'</span> <span class="kw">THEN</span> <span class="str">'Inativo'</span>
+  <span class="kw">ELSE</span> <span class="str">'Desconhecido'</span>
+<span class="kw">END</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 Regras importantes</div>
+      <p>• O SQL avalia as condições <strong>de cima para baixo</strong> e retorna o primeiro WHEN verdadeiro<br>
+      • Se nenhuma condição for satisfeita → retorna <code>ELSE</code><br>
+      • Se não houver <code>ELSE</code> → resultado é <strong>NULL</strong><br>
+      • O <code>END</code> é <strong>obrigatório</strong></p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🗂️ CASE no GROUP BY</div>
+      <div class="code-block"><span class="kw">SELECT</span>
+    <span class="kw">CASE</span>
+        <span class="kw">WHEN</span> salario <span class="kw">>=</span> <span class="num">5000</span> <span class="kw">THEN</span> <span class="str">'ALTO'</span>
+        <span class="kw">WHEN</span> salario <span class="kw">>=</span> <span class="num">3000</span> <span class="kw">THEN</span> <span class="str">'MÉDIO'</span>
+        <span class="kw">ELSE</span> <span class="str">'BAIXO'</span>
+    <span class="kw">END AS</span> faixa_salarial,
+    <span class="fn">COUNT</span>(*) <span class="kw">AS</span> total_funcionarios
+<span class="kw">FROM</span> funcionarios
+<span class="kw">GROUP BY</span> faixa_salarial;</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 CASE no ORDER BY (ordenação personalizada)</div>
+      <div class="code-block"><span class="kw">ORDER BY</span>
+    <span class="kw">CASE</span>
+        <span class="kw">WHEN</span> departamento <span class="kw">=</span> <span class="str">'TI'</span>   <span class="kw">THEN</span> <span class="num">1</span>
+        <span class="kw">WHEN</span> departamento <span class="kw">=</span> <span class="str">'RH'</span>   <span class="kw">THEN</span> <span class="num">2</span>
+        <span class="kw">ELSE</span> <span class="num">3</span>
+    <span class="kw">END</span></div>
+      <p>Ordena por prioridade de negócio, não alfabeticamente.</p>
+    </div>
+  </div>
+
+  <!-- ==================== WINDOW FUNCTIONS ==================== -->
+  <div class="section" id="window">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(16,185,129,0.15)">🪟</div>
+      <div>
+        <div class="section-title">Window Functions</div>
+        <div class="section-sub">Aula 4 — funções analíticas (MySQL 8.0+)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎯 O conceito fundamental</div>
+      <p><strong>GROUP BY</strong> → agrupa e reduz linhas<br>
+      <strong>Window Function</strong> → calcula sobre um grupo <em>mantendo todas as linhas</em></p>
+      <div class="alert alert-tip" style="margin-top:0.8rem"><strong>💡 Analogia:</strong> Window function é como calcular a média do departamento e mostrar ela do lado de <em>cada funcionário individualmente</em>.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚙️ Estrutura</div>
+      <div class="code-block"><span class="fn">funcao</span>() <span class="kw">OVER</span> (
+    <span class="kw">PARTITION BY</span> coluna   <span class="cm">-- divide em grupos</span>
+    <span class="kw">ORDER BY</span> coluna        <span class="cm">-- ordena dentro do grupo</span>
+)</div>
+      <p><code>OVER()</code> vazio = a janela é a tabela toda.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 Funções de Agregação com OVER</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Função</th><th>O que faz</th><th>Exemplo de uso</th></tr>
+          <tr><td><strong>SUM() OVER</strong></td><td>Total acumulado por partição</td><td>Vendas acumuladas por vendedor</td></tr>
+          <tr><td><strong>AVG() OVER</strong></td><td>Média do grupo na mesma linha</td><td>Média salarial do departamento ao lado de cada nome</td></tr>
+          <tr><td><strong>COUNT() OVER</strong></td><td>Contagem do grupo repetida</td><td>Qtde de funcionários do depto em cada linha</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏆 Funções de Ranking — a diferença crucial</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Função</th><th>Empate?</th><th>Resultado com empate</th></tr>
+          <tr><td><strong>ROW_NUMBER()</strong></td><td>Ignorado</td><td>1, 2, 3, 4 — sempre único</td></tr>
+          <tr><td><strong>RANK()</strong></td><td>Posição repetida + salto</td><td>1, 2, 2, <strong>4</strong> (pula o 3)</td></tr>
+          <tr><td><strong>DENSE_RANK()</strong></td><td>Posição repetida sem salto</td><td>1, 2, 2, <strong>3</strong> (sem pular)</td></tr>
+        </table>
+      </div>
+      <div class="alert alert-warn"><strong>⚠️ Dica de prova:</strong> RANK pula posição após empate. DENSE_RANK não pula. ROW_NUMBER nunca empata.</div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">⬅️ LAG() — valor anterior</div>
+        <div class="code-block" style="font-size:0.72rem"><span class="fn">LAG</span>(valor) <span class="kw">OVER</span> (
+    <span class="kw">PARTITION BY</span> vendedor_id
+    <span class="kw">ORDER BY</span> data_venda
+) <span class="kw">AS</span> valor_anterior</div>
+        <p>Compara a linha atual com a linha <strong>anterior</strong>. Primeira linha → NULL.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">➡️ LEAD() — próximo valor</div>
+        <div class="code-block" style="font-size:0.72rem"><span class="fn">LEAD</span>(valor) <span class="kw">OVER</span> (
+    <span class="kw">PARTITION BY</span> vendedor_id
+    <span class="kw">ORDER BY</span> data_venda
+) <span class="kw">AS</span> proxima_venda</div>
+        <p>Compara a linha atual com a linha <strong>seguinte</strong>. Última linha → NULL.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== INDICES & EXPLAIN ==================== -->
+  <div class="section" id="indices">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(239,68,68,0.15)">⚙️</div>
+      <div>
+        <div class="section-title">Índices & EXPLAIN</div>
+        <div class="section-sub">Aula 5 — performance e análise de execução</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📚 O que é um índice?</div>
+      <p>Índice é uma <strong>estrutura de dados separada</strong> (B-Tree) que mapeia valores de coluna para a localização física das linhas — como o índice remissivo de um livro. Evita varredura completa da tabela (Full Table Scan).</p>
+      <div class="chips">
+        <span class="chip chip-green">WHERE</span>
+        <span class="chip chip-green">JOIN</span>
+        <span class="chip chip-green">ORDER BY</span>
+        <span class="chip chip-green">GROUP BY</span>
+        <span class="chip chip-green">BETWEEN / &gt; / &lt;</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 Tipos de Índice no MySQL</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tipo</th><th>Sintaxe</th><th>Característica</th></tr>
+          <tr><td><strong>PRIMARY KEY</strong></td><td>automático</td><td>Já vem com índice, sempre único</td></tr>
+          <tr><td><strong>UNIQUE INDEX</strong></td><td><code>CREATE UNIQUE INDEX</code></td><td>Acelera busca + proíbe duplicatas</td></tr>
+          <tr><td><strong>INDEX simples</strong></td><td><code>CREATE INDEX</code></td><td>B-Tree padrão em uma coluna</td></tr>
+          <tr><td><strong>Índice Composto</strong></td><td><code>CREATE INDEX ON (a,b)</code></td><td>Duas colunas — obedecer ordem!</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📏 As 4 Regras para criar índices</div>
+
+      <div class="rule">
+        <div class="rule-title">Regra A — Alta Cardinalidade (Seletividade)</div>
+        <p>Crie em colunas com muitos valores únicos. <strong>Bom:</strong> <code>cpf</code>, <code>email</code>. <strong>Ruim:</strong> <code>sexo</code>, <code>status</code> — MySQL ignora o índice se retornar &gt;30% das linhas.</p>
+      </div>
+      <div class="rule">
+        <div class="rule-title">Regra B — Prefixo à Esquerda (Leftmost Prefixing)</div>
+        <p>Para índices compostos <code>(A, B, C)</code>: buscas por <code>A</code>, <code>A+B</code>, <code>A+B+C</code> usam o índice. Busca só por <code>B</code> ou <code>C</code> <strong>não usa</strong>.</p>
+      </div>
+      <div class="rule">
+        <div class="rule-title">Regra C — Funções Matam Índice ("Mata-Índice")</div>
+        <p><strong>❌ Errado:</strong> <code>WHERE YEAR(data_cadastro) = 2023</code><br>
+        <strong>✅ Certo:</strong> <code>WHERE data_cadastro >= '2023-01-01' AND data_cadastro &lt;= '2023-12-31'</code></p>
+      </div>
+      <div class="rule">
+        <div class="rule-title">Regra D — Índice melhora leitura, custa escrita</div>
+        <p>Cada <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code> também atualiza o índice. Mais índices = mais custo de manutenção. Não indexe tudo.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔬 EXPLAIN — entendendo o plano de execução</div>
+      <p>Coloque <code>EXPLAIN</code> antes de um SELECT e o MySQL mostrará o plano — sem executar a query.</p>
+      <div class="alert alert-info" style="margin-top:0.7rem"><strong>Coluna <code>type</code></strong> — a mais importante, do melhor ao pior:</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>type</th><th>Significado</th><th>Nível</th></tr>
+          <tr><td><strong>const / eq_ref</strong></td><td>Usou PK ou Unique → vai direto na linha</td><td>🟢 Perfeito</td></tr>
+          <tr><td><strong>ref</strong></td><td>Usou índice B-Tree normal → poucas linhas</td><td>🟢 Ótimo</td></tr>
+          <tr><td><strong>range</strong></td><td>Intervalo com índice (>, &lt;, BETWEEN)</td><td>🟡 Bom</td></tr>
+          <tr><td><strong>index</strong></td><td>Leu a árvore B-Tree inteira (Index Scan)</td><td>🟠 Atenção</td></tr>
+          <tr><td><strong>ALL</strong></td><td>Full Table Scan — ignorou índices</td><td>🔴 Péssimo</td></tr>
+        </table>
+      </div>
+      <div class="alert alert-warn"><strong>⚠️ Pegadinha:</strong> Em tabelas com poucas linhas o MySQL pode retornar <code>ALL</code> mesmo com índice criado — ele calcula que é mais rápido ler tudo. Isso é <em>normal</em>.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🗺️ Outras colunas do EXPLAIN</div>
+      <p><code>possible_keys</code> — índices que <em>poderiam</em> ajudar<br>
+      <code>key</code> — índice que o MySQL <em>escolheu usar</em><br>
+      <code>rows</code> — estimativa de linhas que serão lidas<br>
+      <code>filtered</code> — % de linhas que passam pelo WHERE<br>
+      <code>Extra</code> — avisos: <code>Using filesort</code>, <code>Using temporary</code>, <code>Using index</code></p>
+    </div>
+  </div>
+
+  <!-- ==================== VIEWS ==================== -->
+  <div class="section" id="views">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(6,182,212,0.15)">👁️</div>
+      <div>
+        <div class="section-title">Views</div>
+        <div class="section-sub">Aula 5 — tabelas virtuais que simplificam e protegem</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎯 O que é uma View?</div>
+      <p>Uma <strong>View</strong> é uma tabela virtual que armazena apenas o código SQL (não os dados). Cada consulta sobre ela executa a query original por baixo dos panos.</p>
+      <div class="code-block"><span class="kw">CREATE VIEW</span> vw_nome <span class="kw">AS</span>
+<span class="kw">SELECT</span> c.nome, p.data_pedido, prod.nome <span class="kw">AS</span> produto
+<span class="kw">FROM</span> clientes c
+<span class="kw">INNER JOIN</span> pedidos p <span class="kw">ON</span> c.id <span class="kw">=</span> p.cliente_id
+<span class="kw">INNER JOIN</span> produtos prod <span class="kw">ON</span> p.produto_id <span class="kw">=</span> prod.id;
+
+<span class="cm">-- Consultar é simples:</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> vw_nome;</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏆 Os 3 superpoderes de uma View</div>
+      <div class="rule">
+        <div class="rule-title">1. Simplicidade — esconder complexidade</div>
+        <p>Aquela query gigante com 10 JOINs vira um simples <code>SELECT * FROM vw_relatorio_vendas</code>.</p>
+      </div>
+      <div class="rule">
+        <div class="rule-title">2. Segurança — restringir acesso a colunas</div>
+        <p>Telemarketing vê nome/email/telefone, mas não vê senha. Logística não vê valor financeiro. Você dá permissão só para a View, não para a tabela original.</p>
+      </div>
+      <div class="rule">
+        <div class="rule-title">3. Consistência e manutenção</div>
+        <p>Regra de negócio muda? Altera <em>uma vez</em> na View. O sistema inteiro reflete a mudança.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚠️ Limitações importantes</div>
+      <p>• Views <strong>não melhoram performance</strong> — são só SQL salvo. Os índices precisam estar nas tabelas base.<br><br>
+      • <strong>Views atualizáveis</strong> (simples, sem JOIN): você pode fazer INSERT/UPDATE/DELETE através da View.<br><br>
+      • <strong>Views somente leitura</strong> (com JOIN, GROUP BY, HAVING, agregações, DISTINCT, UNION): <em>não pode</em> alterar dados.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔧 Comandos úteis para ver Views e Índices</div>
+      <div class="code-block"><span class="cm">-- Listar índices de uma tabela</span>
+<span class="kw">SHOW INDEX FROM</span> pedidos;
+
+<span class="cm">-- Listar todas as views do banco</span>
+<span class="kw">SHOW FULL TABLES IN</span> banco
+<span class="kw">WHERE</span> TABLE_TYPE <span class="kw">=</span> <span class="str">'VIEW'</span>;</div>
+    </div>
+  </div>
+
+  <!-- ==================== QUIZ ==================== -->
+  <div class="section" id="quiz">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(245,158,11,0.15)">🧠</div>
+      <div>
+        <div class="section-title">Quiz de Revisão</div>
+        <div class="section-sub">12 questões no estilo das suas provas</div>
+      </div>
+    </div>
+
+    <div class="score-box">
+      <div>
+        <div class="score-num" id="scoreNum">0</div>
+        <div class="score-label">ACERTOS</div>
+      </div>
+      <div style="color:var(--muted);font-size:0.75rem;line-height:1.6">
+        Clique em uma opção para<br>revelar a resposta e explicação.
+      </div>
+    </div>
+
+    <!-- Q1 -->
+    <div class="quiz-card">
+      <div class="quiz-q"><span>Q1</span>Para armazenar valores monetários como salários, qual tipo é o mais adequado?</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="answer(this, false, 'q1')">FLOAT(10,2)</button>
+        <button class="quiz-option" onclick="answer(this, true, 'q1')">DECIMAL(10,2)</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q1')">DOUBLE</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q1')">INT</button>
+      </div>
+      <div class="quiz-feedback" id="q1">DECIMAL armazena números com precisão fixa, evitando erros de arredondamento. FLOAT e DOUBLE usam precisão aproximada — para dinheiro isso é inaceitável.</div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="quiz-card">
+      <div class="quiz-q"><span>Q2</span>Uma subquery no WHERE retorna a média salarial. Qual funcionário vai aparecer no resultado abaixo?<br><code style="font-size:0.8rem">WHERE salario > (SELECT AVG(salario) FROM empregados)</code><br>Salários: Ana=4000, Bruno=5500, Carlos=3000, Daniela=3500, Eduardo=7000, Fernanda=6500. Média ≈ 4916</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="answer(this, false, 'q2')">Ana, Bruno, Eduardo, Fernanda</button>
+        <button class="quiz-option" onclick="answer(this, true, 'q2')">Bruno, Eduardo, Fernanda</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q2')">Eduardo e Fernanda apenas</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q2')">Todos os funcionários</button>
+      </div>
+      <div class="quiz-feedback" id="q2">Média ≈ 4916,66. Somente Bruno (5500), Eduardo (7000) e Fernanda (6500) estão acima. Ana (4000) está abaixo da média.</div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="quiz-card">
+      <div class="quiz-q"><span>Q3</span>No CASE WHEN, o que acontece se nenhuma condição for verdadeira e não houver cláusula ELSE?</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="answer(this, false, 'q3')">Retorna 0</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q3')">Retorna uma string vazia</button>
+        <button class="quiz-option" onclick="answer(this, true, 'q3')">Retorna NULL</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q3')">Gera um erro de SQL</button>
+      </div>
+      <div class="quiz-feedback" id="q3">Quando nenhuma condição é satisfeita e não há ELSE, o resultado é NULL. Por isso é boa prática sempre incluir um ELSE como fallback.</div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="quiz-card">
+      <div class="quiz-q"><span>Q4</span>Qual a diferença entre RANK() e DENSE_RANK() quando dois funcionários empatam na posição 3?</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="answer(this, false, 'q4')">Não há diferença, ambos pulam posições</button>
+        <button class="quiz-option" onclick="answer(this, true, 'q4')">RANK gera 3,3,5 — DENSE_RANK gera 3,3,4</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q4')">DENSE_RANK gera 3,3,5 — RANK gera 3,3,4</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q4')">Ambos geram 3,3,4</button>
+      </div>
+      <div class="quiz-feedback" id="q4">RANK() pula a posição após empate (1,2,3,3,5). DENSE_RANK() não pula (1,2,3,3,4). ROW_NUMBER() nunca empata, sempre único.</div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="quiz-card">
+      <div class="quiz-q"><span>Q5</span>Qual query usa corretamente um índice criado em <code>data_cadastro</code>?</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="answer(this, false, 'q5')">WHERE YEAR(data_cadastro) = 2023</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q5')">WHERE MONTH(data_cadastro) = 12</button>
+        <button class="quiz-option" onclick="answer(this, true, 'q5')">WHERE data_cadastro >= '2023-01-01' AND data_cadastro &lt;= '2023-12-31'</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q5')">WHERE DATE_FORMAT(data_cadastro,'%Y') = '2023'</button>
+      </div>
+      <div class="quiz-feedback" id="q5">Colocar a coluna dentro de uma função (YEAR, MONTH, DATE_FORMAT) "mata o índice" — o MySQL não consegue usar a estrutura B-Tree. A forma correta usa intervalos diretos na coluna.</div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="quiz-card">
+      <div class="quiz-q"><span>Q6</span>Você criou um índice composto <code>(cidade, estado)</code>. Qual busca NÃO vai usar o índice?</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="answer(this, false, 'q6')">WHERE cidade = 'RJ'</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q6')">WHERE cidade = 'SP' AND estado = 'SP'</button>
+        <button class="quiz-option" onclick="answer(this, true, 'q6')">WHERE estado = 'RJ'</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q6')">ORDER BY cidade, estado</button>
+      </div>
+      <div class="quiz-feedback" id="q6">Regra do Prefixo à Esquerda: o índice (cidade, estado) só é usado se a query incluir a coluna mais à esquerda — neste caso, 'cidade'. Buscar apenas por 'estado' ignora o índice.</div>
+    </div>
+
+    <!-- Q7 -->
+    <div class="quiz-card">
+      <div class="quiz-q"><span>Q7</span>O que significa <code>type: ALL</code> no resultado de um EXPLAIN?</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="answer(this, false, 'q7')">O índice foi usado perfeitamente</button>
+        <button class="quiz-option" onclick="answer(this, true, 'q7')">Full Table Scan — todas as linhas foram lidas sem índice</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q7')">Foram lidas todas as colunas da tabela</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q7')">A query retornou todos os registros</button>
+      </div>
+      <div class="quiz-feedback" id="q7">type: ALL é o pior cenário — significa que o MySQL leu cada linha da tabela do início ao fim. Em tabelas grandes isso derruba o servidor. O objetivo é ter type: const, eq_ref ou ref.</div>
+    </div>
+
+    <!-- Q8 -->
+    <div class="quiz-card">
+      <div class="quiz-q"><span>Q8</span>Uma View com GROUP BY e SUM() é considerada:</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="answer(this, false, 'q8')">Atualizável — você pode fazer INSERT/UPDATE</button>
+        <button class="quiz-option" onclick="answer(this, true, 'q8')">Somente leitura — não permite alterar dados</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q8')">Inválida — não se pode criar View com GROUP BY</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q8')">Depende do banco de dados</button>
+      </div>
+      <div class="quiz-feedback" id="q8">Views com GROUP BY, HAVING, funções de agregação (SUM, COUNT), DISTINCT ou UNION são somente leitura (Read-Only). Apenas Views simples, baseadas em uma tabela sem essas operações, permitem INSERT/UPDATE/DELETE.</div>
+    </div>
+
+    <!-- Q9 -->
+    <div class="quiz-card">
+      <div class="quiz-q"><span>Q9</span>Qual a principal vantagem da CTE sobre a Subquery no FROM?</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="answer(this, false, 'q9')">CTE é sempre mais rápida</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q9')">CTE armazena os dados em disco temporariamente</button>
+        <button class="quiz-option" onclick="answer(this, true, 'q9')">CTE melhora legibilidade e permite reutilizar a lógica na mesma query</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q9')">CTE funciona em todos os bancos, subquery não</button>
+      </div>
+      <div class="quiz-feedback" id="q9">A CTE nomeia a consulta, tornando o código mais legível e permitindo referenciar o mesmo resultado em múltiplos lugares da query. No MySQL a CTE não é materializada (performance similar à subquery).</div>
+    </div>
+
+    <!-- Q10 -->
+    <div class="quiz-card">
+      <div class="quiz-q"><span>Q10</span>A função LAG() em uma Window Function serve para:</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="answer(this, false, 'q10')">Calcular a diferença entre duas colunas</button>
+        <button class="quiz-option" onclick="answer(this, true, 'q10')">Acessar o valor da linha anterior dentro da partição</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q10')">Atrasar a execução da query</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q10')">Calcular a média das linhas anteriores</button>
+      </div>
+      <div class="quiz-feedback" id="q10">LAG() retorna o valor da linha anterior dentro da partição (definida por PARTITION BY). É útil para comparar uma venda com a venda anterior do mesmo vendedor. A primeira linha retorna NULL.</div>
+    </div>
+
+    <!-- Q11 -->
+    <div class="quiz-card">
+      <div class="quiz-q"><span>Q11</span>Qual tipo de dado ocupa 1 byte e armazena apenas o ano (YYYY)?</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="answer(this, false, 'q11')">DATE</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q11')">TIME</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q11')">TINYINT</button>
+        <button class="quiz-option" onclick="answer(this, true, 'q11')">YEAR</button>
+      </div>
+      <div class="quiz-feedback" id="q11">YEAR (específico do MySQL) ocupa 1 byte e armazena apenas o ano no formato YYYY. DATE ocupa 3 bytes e guarda data completa. TINYINT ocupa 1 byte mas é numérico inteiro.</div>
+    </div>
+
+    <!-- Q12 -->
+    <div class="quiz-card">
+      <div class="quiz-q"><span>Q12</span>Para criar uma CTE que percorra uma hierarquia de chefes e subordinados, qual palavra-chave adicional é necessária?</div>
+      <div class="quiz-options">
+        <button class="quiz-option" onclick="answer(this, false, 'q12')">WITH LOOP</button>
+        <button class="quiz-option" onclick="answer(this, true, 'q12')">WITH RECURSIVE</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q12')">WITH HIERARCHY</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q12')">WITH UNION ALL</button>
+      </div>
+      <div class="quiz-feedback" id="q12">WITH RECURSIVE permite que a CTE referencie a si mesma. A estrutura precisa de uma âncora (registro raiz, ex: chefe sem chefe_id) + uma parte recursiva que faz JOIN com a CTE até não encontrar mais subordinados.</div>
+    </div>
+
+  </div><!-- end quiz -->
+
+</div><!-- end container -->
+
+<script>
+  let score = 0;
+  let answered = 0;
+  const total = 12;
+
+  function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function answer(btn, isCorrect, qid) {
+    const options = btn.parentElement.querySelectorAll('.quiz-option');
+    if (btn.classList.contains('answered') || [...options].some(o => o.classList.contains('correct') || o.classList.contains('wrong'))) return;
+
+    options.forEach(o => o.classList.add('answered'));
+    const feedback = document.getElementById(qid);
+
+    if (isCorrect) {
+      btn.classList.add('correct');
+      feedback.classList.add('show', 'ok');
+      score++;
+      document.getElementById('scoreNum').textContent = score;
+    } else {
+      btn.classList.add('wrong');
+      feedback.classList.add('show', 'nok');
+      // highlight correct
+      options.forEach(o => {
+        if (o.onclick.toString().includes('true')) o.classList.add('correct');
+      });
+    }
+
+    answered++;
+    const pct = Math.round((answered / total) * 100);
+    document.getElementById('progBar').style.width = pct + '%';
+    document.getElementById('progCount').textContent = answered + ' / ' + total;
+  }
+</script>
+</body>
+</html>
